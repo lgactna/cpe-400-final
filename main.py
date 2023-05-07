@@ -195,7 +195,7 @@ if __name__ == "__main__":
         avg_tr.append(t)
         avg_eg.append(e)
 
-        draw_graph(graph)
+        draw_graph(final_graph)
 
     # Print results.
     print(
