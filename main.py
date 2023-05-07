@@ -1,6 +1,6 @@
 """
 """
-
+import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 import random
@@ -80,7 +80,7 @@ if __name__ == "__main__":
     energy = 50
 
     # Initiate graph network and node batteries
-    sensor_network = nx.from_numpy_array(matrix, create_using=nx.DiGraph())
+    sensor_network = nx.from_numpy_array(matrix, create_using=nx.Graph())
     nx.set_node_attributes(sensor_network, energy, "energy")
 
     # Execute 100 simulations.
@@ -100,3 +100,6 @@ if __name__ == "__main__":
         "Overall Energy Efficiency [100 runs]:"
         f" {round(sum(avg_eg)/len(avg_eg), 2)/energy*100} % used"
     )
+
+    #nx.draw(sensor_network)
+    #plt.show()
