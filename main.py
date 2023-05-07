@@ -45,9 +45,9 @@ def simulate(graph: nx.DiGraph, display: bool):
         # same algorithm, or on testing the same network with different algorithms?
 
         # Sample a random source and destination
+
         u, v = random.sample(range(len(G.nodes)), 2) 
         path = nx.dijkstra_path(G, u, 0)
-
         transmissions += 1
         if display:
             print(f"T{transmissions}: {path}")
@@ -69,7 +69,7 @@ def simulate(graph: nx.DiGraph, display: bool):
                         print(f"Node {n} | Battery Left: {G.nodes[n]['energy']} hops")
                     print(f"Completed: {transmissions} transmissions")
 
-                return transmissions, energy_used / len(G.nodes), G
+                return transmissions, energy_used, G
 
 def gnp_random_connected_graph(n, p) -> nx.Graph:
     """
@@ -109,7 +109,7 @@ def baseline_graph() -> nx.DiGraph:
             [1, 1, 1, 1, 1, 0],
         ]
     )
-    sensor_network = nx.from_numpy_array(matrix, create_using=nx.DiGraph())
+    return nx.from_numpy_array(matrix, create_using=nx.DiGraph())
 
 def initialize_graph(
     graph: Union[nx.Graph, nx.DiGraph],
@@ -180,29 +180,49 @@ if __name__ == "__main__":
     # The "battery" of each node. This is equivalent to the number of transmissions
     # each node can perform before dying, at which point the simulation should stop.
     energy = 50
+    nodes = 12
 
     # Using random graphs for now. The idea is that a suitable graph for simulation
     # can easily be swapped out for another valid graph/diagraph by just calling
     # initialze_graph.
-    sensor_network = gnp_random_connected_graph(12, 0.01)
-    sensor_network = initialize_graph(sensor_network, initial_energy=energy)
+    #sensor_network = gnp_random_connected_graph(nodes, 0.01)
+    #sensor_network = initialize_graph(sensor_network, initial_energy=energy)
 
-    # Execute 100 simulations on the same network, 'reinitialized" each time.
-    avg_tr = []
-    avg_eg = []
-    for _ in range(100):
-        t, e, final_graph = simulate(sensor_network, True)
-        avg_tr.append(t)
-        avg_eg.append(e)
+    topologies = [
+        ("Mesh", nx.complete_graph(nodes)),
+        ("Star", nx.star_graph(nodes)),
+        ("Wheel", nx.wheel_graph(nodes)),
+        ("Ring", nx.cycle_graph(nodes))
+    ]
 
-        draw_graph(final_graph)
+    for top in topologies:
+        print(f'Executing 100 simulations on {top[0]} topology w/ Central Node 0:')
+        # Execute 100 simulations on the same network, 'reinitialized" each time.
+        avg_tr = []
+        avg_eg = []
+        for _ in range(100):
+            t, e, final_graph = simulate(initialize_graph(top[1]), False)
+            avg_tr.append(t)
+            avg_eg.append(e)
 
-    # Print results.
-    print(
-        "Average Transmission Completion [100 runs]:"
-        f" {round(sum(avg_tr)/len(avg_tr), 2)} transmissions"
-    )
-    print(
-        "Overall Energy Efficiency [100 runs]:"
-        f" {round(sum(avg_eg)/len(avg_eg), 2)/energy*100} % used"
-    )
+            #draw_graph(final_graph)
+
+        overall_tr = sum(avg_tr)/len(avg_tr)
+        overall_eg = sum(avg_eg)/len(avg_eg)
+        overall_eff = overall_eg/overall_tr
+
+
+        # Print results.
+        print(
+            "-Average Transmission Completion:"
+            f" {round(overall_tr, 2)} transmissions"
+        )
+        print(
+            "-Overall Energy Used:"
+            f" {round(overall_eg/nodes/energy*100, 2)} % used"
+        )
+        print(
+            "-Overall Energy Efficiency:"
+            f" {round(overall_eff, 2)} hops/transmission"
+        )
+        print()
