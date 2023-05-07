@@ -10,16 +10,15 @@ def simulate(graph: nx.DiGraph, display: bool):
     """
     Simulate random transmissions within a battery-constrained sensor node network.
 
-    `graph`'s nodes must have the attributes `energy` and `burden`. `energy` is
-    the "battery" of the sensor node; `burden` should be set to 0.
+    `graph`'s nodes must have the attributes `energy`. `energy` is
+    the "battery" of the sensor node.
 
     :param graph: A networkx digraph representing the network with the attributes
         mentioned above. Edge attributes and all other node attributes are ignored.
     :param display: Enables the display of various debug messages.
     :returns: A tuple of:
         - int: the number of transmissions successfully done before a node died
-        - int: the average burden across nodes
-        - int: the average remaining energy across nodes
+        - int: the overall energy efficiency of the simulation
     """
     # Initialize the random number generator, which dictates which nodes
     # need to make transmissions.
@@ -32,12 +31,11 @@ def simulate(graph: nx.DiGraph, display: bool):
 
     # Counters/overhead
     transmissions = 0
-    burden = 0
-    remaining = 0
+    energy_used = 0
 
     while True:
         # Sample a random source and destination
-        u, v = random.sample(range(0, 6), 2)
+        u, v = random.sample(range(len(G.nodes)), 2)
         path = nx.dijkstra_path(G, u, v)
         transmissions += 1
         if display:
@@ -46,7 +44,7 @@ def simulate(graph: nx.DiGraph, display: bool):
         # Account for all nodes except the last for transmission costs and burden
         for node in path[:-1]:
             G.nodes[node]["energy"] -= 1
-            G.nodes[node]["burden"] += 1
+            energy_used += 1
 
             # Communicate to all neighbors that energy was used and make path less favorable
             for adj in G.adj[node]:
@@ -60,11 +58,7 @@ def simulate(graph: nx.DiGraph, display: bool):
                         print(f"Node {n} | Battery Left: {G.nodes[n]['energy']} hops")
                     print(f"Completed: {transmissions} transmissions")
 
-                for n in range(len(G.nodes)):
-                    burden += G.nodes[n]["burden"]
-                    remaining += G.nodes[n]["energy"]
-
-                return transmissions, burden / len(G.nodes), remaining / len(G.nodes)
+                return transmissions, energy_used / len(G.nodes)
 
 
 if __name__ == "__main__":
@@ -88,17 +82,14 @@ if __name__ == "__main__":
     # Initiate graph network and node batteries
     sensor_network = nx.from_numpy_array(matrix, create_using=nx.DiGraph())
     nx.set_node_attributes(sensor_network, energy, "energy")
-    nx.set_node_attributes(sensor_network, 0, "burden")
 
     # Execute 100 simulations.
     avg_tr = []
-    avg_bd = []
-    avg_rm = []
+    avg_eg = []
     for _ in range(100):
-        t, b, r = simulate(sensor_network, False)
+        t, e = simulate(sensor_network, False)
         avg_tr.append(t)
-        avg_bd.append(b)
-        avg_rm.append(r)
+        avg_eg.append(e)
 
     # Print results.
     print(
@@ -106,10 +97,6 @@ if __name__ == "__main__":
         f" {round(sum(avg_tr)/len(avg_tr), 2)} transmissions"
     )
     print(
-        "Average Burden Across Nodes [100 runs]:"
-        f" {round(sum(avg_bd)/len(avg_bd), 2)} hops"
-    )
-    print(
-        "Average Remaining Energy Across Nodes [100 runs]:"
-        f" {round(sum(avg_rm) / len(avg_rm), 2)} hops"
+        "Overall Energy Efficiency [100 runs]:"
+        f" {round(sum(avg_eg)/len(avg_eg), 2)/energy*100} % used"
     )
