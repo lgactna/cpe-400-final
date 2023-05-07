@@ -45,7 +45,7 @@ def simulate(graph: nx.DiGraph, display: bool):
         # same algorithm, or on testing the same network with different algorithms?
 
         # Sample a random source and destination
-        u, v = random.sample(range(len(G.nodes)), 2) 
+        u, v = random.sample(range(len(G.nodes)), 2)
         path = nx.dijkstra_path(G, u, 0)
 
         transmissions += 1
@@ -71,9 +71,10 @@ def simulate(graph: nx.DiGraph, display: bool):
 
                 return transmissions, energy_used / len(G.nodes), G
 
+
 def gnp_random_connected_graph(n, p) -> nx.Graph:
     """
-    Generates a random undirected graph, similarly to an Erdős-Rényi 
+    Generates a random undirected graph, similarly to an Erdős-Rényi
     graph, but enforcing that the resulting graph is conneted
     """
     # From https://stackoverflow.com/questions/61958360/how-to-create-random-graph-where-each-node-has-at-least-1-edge-using-networkx
@@ -93,6 +94,7 @@ def gnp_random_connected_graph(n, p) -> nx.Graph:
                 G.add_edge(*e)
     return G
 
+
 def baseline_graph() -> nx.DiGraph:
     """
     The "baseline" directed graph.
@@ -111,9 +113,9 @@ def baseline_graph() -> nx.DiGraph:
     )
     sensor_network = nx.from_numpy_array(matrix, create_using=nx.DiGraph())
 
+
 def initialize_graph(
-    graph: Union[nx.Graph, nx.DiGraph],
-    initial_energy: int = 50
+    graph: Union[nx.Graph, nx.DiGraph], initial_energy: int = 50
 ) -> nx.DiGraph:
     """
     Return an initialized graph for simulation.
@@ -139,6 +141,7 @@ def initialize_graph(
 
     return G
 
+
 def draw_graph(graph: nx.DiGraph) -> None:
     """
     Display the digraph using the report's conventions for graph-making.
@@ -148,7 +151,7 @@ def draw_graph(graph: nx.DiGraph) -> None:
     :param graph: The graph to visualize using matplotlib.
     """
     # Create "base" plot
-    plt.figure(figsize=(10,6))
+    plt.figure(figsize=(10, 6))
 
     # Calculate positions of nodes according to the spring layout,
     # which has been the most visually "appealing" in our tests
@@ -159,22 +162,23 @@ def draw_graph(graph: nx.DiGraph) -> None:
     # (because nodes should always be able to transmit to each other), but
     # the "advertised" edge weight is the only thing that matters, since it indicates
     # how much or how little that edge should be used in trying to get to the C2.
-    node_labels = nx.get_node_attributes(graph, 'energy')
+    node_labels = nx.get_node_attributes(graph, "energy")
     nx.draw(
         graph,
         pos=positions,
-        node_color='lightblue', 
-        with_labels=True, 
+        node_color="lightblue",
+        with_labels=True,
         node_size=500,
     )
-    labels = nx.get_edge_attributes(graph, 'weight')
+    labels = nx.get_edge_attributes(graph, "weight")
     nx.draw_networkx_edge_labels(
-        graph, 
-        pos=positions, 
+        graph,
+        pos=positions,
         edge_labels=labels,
     )
 
     plt.show()
+
 
 if __name__ == "__main__":
     # The "battery" of each node. This is equivalent to the number of transmissions
@@ -184,13 +188,14 @@ if __name__ == "__main__":
     # Using random graphs for now. The idea is that a suitable graph for simulation
     # can easily be swapped out for another valid graph/diagraph by just calling
     # initialze_graph.
-    sensor_network = gnp_random_connected_graph(12, 0.01)
+    # sensor_network = gnp_random_connected_graph(12, 0.01)
+    sensor_network = nx.barbell_graph(4, 1)
     sensor_network = initialize_graph(sensor_network, initial_energy=energy)
 
     # Execute 100 simulations on the same network, 'reinitialized" each time.
     avg_tr = []
     avg_eg = []
-    for _ in range(100):
+    for _ in range(1):
         t, e, final_graph = simulate(sensor_network, True)
         avg_tr.append(t)
         avg_eg.append(e)
