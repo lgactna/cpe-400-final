@@ -18,7 +18,8 @@ def simulate(graph: nx.DiGraph, display: bool):
     :param display: Enables the display of various debug messages.
     :returns: A tuple of:
         - int: the number of transmissions successfully done before a node died
-        - int: the final burden across nodes
+        - int: the average burden across nodes
+        - int: the average remaining energy across nodes
     """
     # Initialize the random number generator, which dictates which nodes
     # need to make transmissions.
@@ -32,6 +33,7 @@ def simulate(graph: nx.DiGraph, display: bool):
     # Counters/overhead
     transmissions = 0
     burden = 0
+    remaining = 0
 
     while True:
         # Sample a random source and destination
@@ -60,8 +62,9 @@ def simulate(graph: nx.DiGraph, display: bool):
 
                 for n in range(len(G.nodes)):
                     burden += G.nodes[n]["burden"]
+                    remaining += G.nodes[n]["energy"]
 
-                return transmissions, burden / len(G.nodes)
+                return transmissions, burden / len(G.nodes), remaining / len(G.nodes)
 
 
 if __name__ == "__main__":
@@ -90,10 +93,12 @@ if __name__ == "__main__":
     # Execute 100 simulations.
     avg_tr = []
     avg_bd = []
+    avg_rm = []
     for _ in range(100):
-        t, b = simulate(sensor_network, False)
+        t, b, r = simulate(sensor_network, False)
         avg_tr.append(t)
         avg_bd.append(b)
+        avg_rm.append(r)
 
     # Print results.
     print(
@@ -103,4 +108,8 @@ if __name__ == "__main__":
     print(
         "Average Burden Across Nodes [100 runs]:"
         f" {round(sum(avg_bd)/len(avg_bd), 2)} hops"
+    )
+    print(
+        "Average Remaining Energy Across Nodes [100 runs]:"
+        f" {round(sum(avg_rm) / len(avg_rm), 2)} hops"
     )
