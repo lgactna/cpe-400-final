@@ -199,6 +199,12 @@ if __name__ == "__main__":
         ("Ring", nx.cycle_graph(NODES), nx.circular_layout),
         ("Barbell", nx.barbell_graph(int(NODES / 2 - 1), 2), nx.spring_layout),
         ("Connected Erdős-Rényi", gnp_random_connected_graph(NODES, 0.01), nx.spring_layout),
+        ("Connected Caveman", nx.connected_caveman_graph(3, 4), nx.spring_layout),
+        # Note that powerlaw may occasionally fail within the required number of
+        # attempts, in which case the script should be restarted.
+        ("Powerlaw Tree", nx.random_powerlaw_tree(12, 2), nx.spring_layout),
+        ("Watts-Strogatz", nx.watts_strogatz_graph(12, 4, 0.25), nx.spring_layout),
+        ("Barabasi-Albert", nx.barabasi_albert_graph(12, 3), nx.spring_layout),
     )
     # fmt: on
 
