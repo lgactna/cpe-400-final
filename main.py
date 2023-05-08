@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 import random
-from typing import Union
+from typing import Callable, Union
 from itertools import combinations, groupby
 
 # Simulation function (Set Display flag for individual paths taken)
@@ -67,7 +67,7 @@ def simulate(graph: nx.DiGraph, display: bool):
 def gnp_random_connected_graph(n, p) -> nx.Graph:
     """
     Generates a random undirected graph, similarly to an Erdős-Rényi
-    graph, but enforcing that the resulting graph is conneted
+    graph, but enforcing that the resulting graph is connected.
     """
     # From https://stackoverflow.com/questions/61958360/how-to-create-random-graph-where-each-node-has-at-least-1-edge-using-networkx
     edges = combinations(range(n), 2)
@@ -134,20 +134,21 @@ def initialize_graph(
     return G
 
 
-def draw_graph(graph: nx.DiGraph) -> None:
+def draw_graph(graph: nx.DiGraph, layout: Callable = nx.shell_layout) -> None:
     """
     Display the digraph using the report's conventions for graph-making.
 
     Note that `graph` should have already been run through the simulator.
 
     :param graph: The graph to visualize using matplotlib.
+    :param layout: The layout function to use. Shell layout is used by default.
     """
     # Create "base" plot
     plt.figure(figsize=(10, 6))
 
     # Calculate positions of nodes according to the spring layout,
     # which has been the most visually "appealing" in our tests
-    positions = nx.spring_layout(graph)
+    positions = layout(graph)
 
     # Draw the graph using the report's conventions. Note that the weight
     # attribute of edges is added as well. Formally, the edges are in both directions
@@ -175,8 +176,10 @@ def draw_graph(graph: nx.DiGraph) -> None:
 if __name__ == "__main__":
     # The "battery" of each node. This is equivalent to the number of transmissions
     # each node can perform before dying, at which point the simulation should stop.
-    energy = 50
-    nodes = 12
+    INTIAL_ENERGY = 50
+
+    # The number of nodes in each topology.
+    NODES = 12
 
     # Using random graphs for now. The idea is that a suitable graph for simulation
     # can easily be swapped out for another valid graph/diagraph by just calling
@@ -185,10 +188,11 @@ if __name__ == "__main__":
     #sensor_network = initialize_graph(sensor_network, initial_energy=energy)
 
     topologies = [
-        ("Mesh", nx.complete_graph(nodes)),
-        ("Star", nx.star_graph(nodes)),
-        ("Wheel", nx.wheel_graph(nodes)),
-        ("Ring", nx.cycle_graph(nodes))
+        ("Mesh", nx.complete_graph(NODES), nx.circular_layout),
+        ("Star", nx.star_graph(NODES), nx.circular_layout),
+        ("Wheel", nx.wheel_graph(NODES), nx.circular_layout),
+        ("Ring", nx.cycle_graph(NODES), nx.circular_layout),
+        ("Connected Erdős-Rényi", gnp_random_connected_graph(NODES, 0.01), nx.spring_layout)
     ]
 
     for top in topologies:
@@ -197,11 +201,11 @@ if __name__ == "__main__":
         avg_tr = []
         avg_eg = []
         for _ in range(100):
-            t, e, final_graph = simulate(initialize_graph(top[1]), False)
+            t, e, final_graph = simulate(initialize_graph(top[1], INTIAL_ENERGY), False)
             avg_tr.append(t)
             avg_eg.append(e)
 
-        draw_graph(final_graph)
+        draw_graph(final_graph, top[2])
 
         overall_tr = sum(avg_tr)/len(avg_tr)
         overall_eg = sum(avg_eg)/len(avg_eg)
@@ -214,7 +218,7 @@ if __name__ == "__main__":
         )
         print(
             "-Overall Energy Used:"
-            f" {round(overall_eg/nodes/energy*100, 2)} % used"
+            f" {round(overall_eg/NODES/INTIAL_ENERGY*100, 2)} % used"
         )
         print(
             "-Overall Energy Efficiency:"
