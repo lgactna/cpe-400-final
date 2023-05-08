@@ -36,14 +36,6 @@ def simulate(graph: nx.DiGraph, display: bool):
     energy_used = 0
 
     while True:
-        # TODO: The paper currently mentions that all nodes go to a C2, which I've
-        # assumed to be node 0. This is currently hardcoded (and naturally, if
-        # we decide to go this route, random.sample should be random.randint).
-        #
-        # Still thinking on the easiest thing to write about - should the focus
-        # of the report be on testing a bunch of different networks with the
-        # same algorithm, or on testing the same network with different algorithms?
-
         # Sample a random source and destination
         u, v = random.sample(range(len(G.nodes)), 2)
         path = nx.dijkstra_path(G, u, 0)
@@ -209,7 +201,7 @@ if __name__ == "__main__":
             avg_tr.append(t)
             avg_eg.append(e)
 
-            #draw_graph(final_graph)
+        draw_graph(final_graph)
 
         overall_tr = sum(avg_tr)/len(avg_tr)
         overall_eg = sum(avg_eg)/len(avg_eg)
