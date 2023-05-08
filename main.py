@@ -185,7 +185,7 @@ if __name__ == "__main__":
     NODES = 12
 
     DRAW_INITIAL_GRAPH = False
-    DRAW_INTERMEDIATE_GRAPHS = True
+    DRAW_INTERMEDIATE_GRAPHS = False
 
     # A tuple of topologies, where:
     # - the first element is the "common" name of the topology
@@ -193,11 +193,11 @@ if __name__ == "__main__":
     # - the third element is the layout to use when visualizing is enabled
     # fmt: off
     topologies = (
-        # ("Mesh", nx.complete_graph(NODES), nx.circular_layout),
-        # ("Star", nx.star_graph(NODES), nx.circular_layout),
-        # ("Wheel", nx.wheel_graph(NODES), nx.circular_layout),
-        # ("Ring", nx.cycle_graph(NODES), nx.circular_layout),
-        # ("Barbell", nx.barbell_graph(int(NODES / 2 - 1), 2)),
+        ("Mesh", nx.complete_graph(NODES), nx.circular_layout),
+        ("Star", nx.star_graph(NODES), nx.circular_layout),
+        ("Wheel", nx.wheel_graph(NODES), nx.circular_layout),
+        ("Ring", nx.cycle_graph(NODES), nx.circular_layout),
+        ("Barbell", nx.barbell_graph(int(NODES / 2 - 1), 2), nx.spring_layout),
         ("Connected Erdős-Rényi", gnp_random_connected_graph(NODES, 0.01), nx.spring_layout),
     )
     # fmt: on
@@ -220,8 +220,8 @@ if __name__ == "__main__":
                 avg_tr.append(t)
                 avg_eg.append(e)
 
-            if DRAW_INITIAL_GRAPH:
-                draw_graph(top[1], top[2])
+            if DRAW_INTERMEDIATE_GRAPHS:
+                draw_graph(final_graph, top[2])
 
             overall_tr = sum(avg_tr) / len(avg_tr)
             overall_eg = sum(avg_eg) / len(avg_eg)
@@ -244,8 +244,8 @@ if __name__ == "__main__":
             )
             print()
         
-        if DRAW_INTERMEDIATE_GRAPHS:
-                draw_graph(final_graph, top[2])
+        if DRAW_INITIAL_GRAPH:
+            draw_graph(top[1], top[2])
         
         plt.figure(dpi=100)
         plt.subplot(2, 2, 1)
