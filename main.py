@@ -8,7 +8,7 @@ from typing import Union
 from itertools import combinations, groupby
 
 # Simulation function (Set Display flag for individual paths taken)
-def simulate(graph: nx.DiGraph, display: bool):
+def simulate(graph: nx.DiGraph, central_node: int, display: bool):
     """
     Simulate random transmissions within a battery-constrained sensor node network.
 
@@ -38,7 +38,7 @@ def simulate(graph: nx.DiGraph, display: bool):
     while True:
         # Sample a random source and destination
         u, v = random.sample(range(len(G.nodes)), 2)
-        path = nx.dijkstra_path(G, u, 0)
+        path = nx.dijkstra_path(G, u, central_node)
 
         transmissions += 1
         if display:
@@ -185,39 +185,59 @@ if __name__ == "__main__":
     #sensor_network = initialize_graph(sensor_network, initial_energy=energy)
 
     topologies = [
-        ("Mesh", nx.complete_graph(nodes)),
+        #("Mesh", nx.complete_graph(nodes)),
         ("Star", nx.star_graph(nodes)),
         ("Wheel", nx.wheel_graph(nodes)),
-        ("Ring", nx.cycle_graph(nodes))
+        ("Ring", nx.cycle_graph(nodes)),
+        ("Barbell", nx.barbell_graph(int(nodes/2-1), 2))
     ]
 
     for top in topologies:
-        print(f'Executing 100 simulations on {top[0]} topology w/ Central Node 0:')
-        # Execute 100 simulations on the same network, 'reinitialized" each time.
-        avg_tr = []
-        avg_eg = []
-        for _ in range(100):
-            t, e, final_graph = simulate(initialize_graph(top[1]), False)
-            avg_tr.append(t)
-            avg_eg.append(e)
+        tr_data = []
+        eg_data = []
+        eff_data = []
+        for n in range(nodes):
+            print(f'Executing 100 simulations on {top[0]} topology w/ Central Node {n}:')
+            # Execute 100 simulations on the same network, 'reinitialized" each time.
+            avg_tr = []
+            avg_eg = []
+            for _ in range(100):
+                t, e, final_graph = simulate(initialize_graph(top[1]), n, False)
+                avg_tr.append(t)
+                avg_eg.append(e)
 
-        draw_graph(final_graph)
+            #draw_graph(final_graph)
 
-        overall_tr = sum(avg_tr)/len(avg_tr)
-        overall_eg = sum(avg_eg)/len(avg_eg)
-        overall_eff = overall_eg/overall_tr
+            overall_tr = sum(avg_tr)/len(avg_tr)
+            overall_eg = sum(avg_eg)/len(avg_eg)
+            overall_eff = overall_eg/overall_tr
+            tr_data.append(overall_tr)
+            eg_data.append(overall_eg/nodes/energy*100)
+            eff_data.append(overall_eff)
 
-        # Print results.
-        print(
-            "-Average Transmission Completion:"
-            f" {round(overall_tr, 2)} transmissions"
-        )
-        print(
-            "-Overall Energy Used:"
-            f" {round(overall_eg/nodes/energy*100, 2)} % used"
-        )
-        print(
-            "-Overall Energy Efficiency:"
-            f" {round(overall_eff, 2)} hops/transmission"
-        )
-        print()
+            # Print results.
+            print(
+                "-Average Transmission Completion:"
+                f" {round(overall_tr, 2)} transmissions"
+            )
+            print(
+                "-Overall Energy Used:"
+                f" {round(overall_eg/nodes/energy*100, 2)} % used"
+            )
+            print(
+                "-Overall Energy Efficiency:"
+                f" {round(overall_eff, 2)} hops/transmission"
+            )
+            print()
+        plt.figure(dpi=100)
+        plt.subplot(3, 1, 1)
+        plt.bar(range(nodes), tr_data)
+        plt.title("Transmission vs. Central Node")
+        plt.subplot(3, 1, 2)
+        plt.bar(range(nodes), eg_data)
+        plt.title("Energy Used vs. Central Node")
+        plt.subplot(3, 1, 3)
+        plt.bar(range(nodes), eff_data)
+        plt.title("Energy Efficiency vs. Central Node")
+        plt.tight_layout(pad=2.0)
+        plt.show()
