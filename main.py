@@ -210,13 +210,13 @@ if __name__ == "__main__":
                 avg_tr.append(t)
                 avg_eg.append(e)
 
-        #draw_graph(final_graph, top[2])
+            #draw_graph(final_graph, top[2])
 
             overall_tr = sum(avg_tr)/len(avg_tr)
             overall_eg = sum(avg_eg)/len(avg_eg)
             overall_eff = overall_eg/overall_tr
             tr_data.append(overall_tr)
-            eg_data.append(overall_eg/nodes/energy*100)
+            eg_data.append(overall_eg/NODES/INTIAL_ENERGY*100)
             eff_data.append(overall_eff)
 
             # Print results.
@@ -234,13 +234,13 @@ if __name__ == "__main__":
             )
             print()
         plt.figure(dpi=100)
-        plt.subplot(3, 1, 1)
+        plt.subplot(2, 2, 1)
         plt.bar(range(NODES), tr_data)
         plt.title("Transmission vs. Central Node")
-        plt.subplot(3, 1, 2)
+        plt.subplot(2, 2, 2)
         plt.bar(range(NODES), eg_data)
         plt.title("Energy Used vs. Central Node")
-        plt.subplot(3, 1, 3)
+        plt.subplot(2, 2, 3)
         plt.bar(range(NODES), eff_data)
         plt.title("Energy Efficiency vs. Central Node")
         plt.tight_layout(pad=2.0)
