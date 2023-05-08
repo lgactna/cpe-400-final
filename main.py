@@ -35,9 +35,12 @@ def simulate(graph: nx.DiGraph, central_node: int, display: bool):
     transmissions = 0
     energy_used = 0
 
+    sample_set = list(range(len(G.nodes)))
+    sample_set.remove(central_node)
+
     while True:
-        # Sample a random source and destination
-        u, v = random.sample(range(len(G.nodes)), 2)
+        # Sample a random source, excluding the central node itself
+        u = random.choice(sample_set)
         path = nx.dijkstra_path(G, u, central_node)
 
         transmissions += 1
@@ -181,42 +184,50 @@ if __name__ == "__main__":
     # The number of nodes in each topology.
     NODES = 12
 
-    # Using random graphs for now. The idea is that a suitable graph for simulation
-    # can easily be swapped out for another valid graph/diagraph by just calling
-    # initialze_graph.
-    #sensor_network = gnp_random_connected_graph(nodes, 0.01)
-    #sensor_network = initialize_graph(sensor_network, initial_energy=energy)
+    DRAW_INITIAL_GRAPH = False
+    DRAW_INTERMEDIATE_GRAPHS = True
 
-    topologies = [
-        ("Mesh", nx.complete_graph(NODES), nx.circular_layout),
-        ("Star", nx.star_graph(NODES), nx.circular_layout),
-        ("Wheel", nx.wheel_graph(NODES), nx.circular_layout),
-        ("Ring", nx.cycle_graph(NODES), nx.circular_layout),
+    # A tuple of topologies, where:
+    # - the first element is the "common" name of the topology
+    # - the second element is the constant graph to use
+    # - the third element is the layout to use when visualizing is enabled
+    # fmt: off
+    topologies = (
+        # ("Mesh", nx.complete_graph(NODES), nx.circular_layout),
+        # ("Star", nx.star_graph(NODES), nx.circular_layout),
+        # ("Wheel", nx.wheel_graph(NODES), nx.circular_layout),
+        # ("Ring", nx.cycle_graph(NODES), nx.circular_layout),
+        # ("Barbell", nx.barbell_graph(int(NODES / 2 - 1), 2)),
         ("Connected Erdős-Rényi", gnp_random_connected_graph(NODES, 0.01), nx.spring_layout),
-        ("Barbell", nx.barbell_graph(int(NODES/2-1), 2))
-    ]
+    )
+    # fmt: on
 
     for top in topologies:
         tr_data = []
         eg_data = []
         eff_data = []
         for n in range(NODES):
-            print(f'Executing 100 simulations on {top[0]} topology w/ Central Node {n}:')
+            print(
+                f"Executing 100 simulations on {top[0]} topology w/ Central Node {n}:"
+            )
             # Execute 100 simulations on the same network, 'reinitialized" each time.
             avg_tr = []
             avg_eg = []
             for _ in range(100):
-                t, e, final_graph = simulate(initialize_graph(top[1], INTIAL_ENERGY), n, False)
+                t, e, final_graph = simulate(
+                    initialize_graph(top[1], INTIAL_ENERGY), n, False
+                )
                 avg_tr.append(t)
                 avg_eg.append(e)
 
-            #draw_graph(final_graph, top[2])
+            if DRAW_INITIAL_GRAPH:
+                draw_graph(top[1], top[2])
 
-            overall_tr = sum(avg_tr)/len(avg_tr)
-            overall_eg = sum(avg_eg)/len(avg_eg)
-            overall_eff = overall_eg/overall_tr
+            overall_tr = sum(avg_tr) / len(avg_tr)
+            overall_eg = sum(avg_eg) / len(avg_eg)
+            overall_eff = overall_eg / overall_tr
             tr_data.append(overall_tr)
-            eg_data.append(overall_eg/NODES/INTIAL_ENERGY*100)
+            eg_data.append(overall_eg / NODES / INTIAL_ENERGY * 100)
             eff_data.append(overall_eff)
 
             # Print results.
@@ -229,10 +240,13 @@ if __name__ == "__main__":
                 f" {round(overall_eg/NODES/INTIAL_ENERGY*100, 2)} % used"
             )
             print(
-                "-Overall Energy Efficiency:"
-                f" {round(overall_eff, 2)} hops/transmission"
+                f"-Overall Energy Efficiency: {round(overall_eff, 2)} hops/transmission"
             )
             print()
+        
+        if DRAW_INTERMEDIATE_GRAPHS:
+                draw_graph(final_graph, top[2])
+        
         plt.figure(dpi=100)
         plt.subplot(2, 2, 1)
         plt.bar(range(NODES), tr_data)
