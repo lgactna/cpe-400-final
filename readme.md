@@ -1,4 +1,5 @@
 ## Installation
+Install Python 3.8+, then run:
 ```bash
 pip install -r requirements.txt
 ```
