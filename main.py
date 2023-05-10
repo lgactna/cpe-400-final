@@ -231,16 +231,16 @@ def gen_tops(nodes: int) -> Tuple:
     try:
         # fmt: off
         tops = (
-            ("Mesh", nx.complete_graph(NODES), nx.circular_layout),
-            ("Star", nx.star_graph(NODES), nx.circular_layout),
-            ("Wheel", nx.wheel_graph(NODES), nx.circular_layout),
-            ("Ring", nx.cycle_graph(NODES), nx.circular_layout),
-            ("Barbell", nx.barbell_graph(int(NODES / 2 - 1), 2), nx.spring_layout),
-            ("Connected Erdős-Rényi", gnp_random_connected_graph(NODES, 0.01), nx.spring_layout),
+            ("Mesh", nx.complete_graph(nodes), nx.circular_layout),
+            ("Star", nx.star_graph(nodes), nx.circular_layout),
+            ("Wheel", nx.wheel_graph(nodes), nx.circular_layout),
+            ("Ring", nx.cycle_graph(nodes), nx.circular_layout),
+            ("Barbell", nx.barbell_graph(int(nodes / 2 - 1), 2), nx.spring_layout),
+            ("Connected Erdős-Rényi", gnp_random_connected_graph(nodes, 0.01), nx.spring_layout),
             ("Connected Caveman", nx.connected_caveman_graph(3, 4), nx.spring_layout),
-            ("Powerlaw Tree", nx.random_powerlaw_tree(NODES, 2), nx.spring_layout),
-            ("Watts-Strogatz", nx.watts_strogatz_graph(NODES, 4, 0.25), nx.spring_layout),
-            ("Barabasi-Albert", nx.barabasi_albert_graph(NODES, 3), nx.spring_layout),
+            ("Powerlaw Tree", nx.random_powerlaw_tree(nodes, 2), nx.spring_layout),
+            ("Watts-Strogatz", nx.watts_strogatz_graph(nodes, 4, 0.25), nx.spring_layout),
+            ("Barabasi-Albert", nx.barabasi_albert_graph(nodes, 3), nx.spring_layout),
         )
         # fmt: on
         return tops
