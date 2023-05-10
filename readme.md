@@ -1,3 +1,5 @@
+The source is hosted at [https://github.com/lgactna/cpe-400-final](https://github.com/lgactna/cpe-400-final).
+
 ## Installation
 Install Python 3.8+, then run:
 ```bash
