@@ -9,8 +9,10 @@ pip install -r requirements.txt
 python main.py
 ```
 
-NOTE: Running all simulations in __main__ may fail, since the generation of a powerlaw
-tree is non-deterministic and may not succeed within the default number of attempts.
+NOTE: The generation of a powerlaw tree is non-deterministic and may not succeed
+ within the default number of attempts.
 
-To fix this, remove the Powerlaw Tree tuple entry from `topologies` in main(), or 
-re-run the script until generation succeeds. This is a constraint of NetworkX.
+By default, the script will attempt to re-generate the powerlaw tree indefinitely
+ until it succeeds, which is guaranteed to occur. However, you can also fix this
+ by removing the powerlaw tree tuple entry from `gen_tops()`. This is a constraint
+ of NetworkX's implementation of powerlaw tree generation.
