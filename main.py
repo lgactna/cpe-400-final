@@ -182,6 +182,11 @@ def draw_graph(graph: nx.DiGraph, layout: Callable = nx.shell_layout) -> None:
 
 def gen_tops(nodes: int):
     try:
+        # A tuple of topologies, where:
+        # - the first element is the "common" name of the topology
+        # - the second element is the constant graph to use
+        # - the third element is the layout to use when visualizing is enabled
+        # fmt: off
         tops = (
             ("Mesh", nx.complete_graph(NODES), nx.circular_layout),
             ("Star", nx.star_graph(NODES), nx.circular_layout),
@@ -196,9 +201,10 @@ def gen_tops(nodes: int):
             ("Watts-Strogatz", nx.watts_strogatz_graph(NODES, 4, 0.25), nx.spring_layout),
             ("Barabasi-Albert", nx.barabasi_albert_graph(NODES, 3), nx.spring_layout),
         )
+        # fmt: on
         return tops
     except nx.NetworkXError:
-        print("Attempting Again")
+        print("Failed: Attempting Again")
         return gen_tops(nodes)
 
 if __name__ == "__main__":
@@ -211,29 +217,6 @@ if __name__ == "__main__":
 
     DRAW_INITIAL_GRAPH = False
     DRAW_INTERMEDIATE_GRAPHS = False
-
-
-
-    # A tuple of topologies, where:
-    # - the first element is the "common" name of the topology
-    # - the second element is the constant graph to use
-    # - the third element is the layout to use when visualizing is enabled
-    # fmt: off
-    '''topologies = (
-        #("Mesh", nx.complete_graph(NODES), nx.circular_layout),
-        #("Star", nx.star_graph(NODES), nx.circular_layout),
-        #("Wheel", nx.wheel_graph(NODES), nx.circular_layout),
-        #("Ring", nx.cycle_graph(NODES), nx.circular_layout),
-        #("Barbell", nx.barbell_graph(int(NODES / 2 - 1), 2), nx.spring_layout),
-        #("Connected Erdős-Rényi", gnp_random_connected_graph(NODES, 0.01), nx.spring_layout),
-        #("Connected Caveman", nx.connected_caveman_graph(3, 4), nx.spring_layout),
-        # Note that powerlaw may occasionally fail within the required number of
-        # attempts, in which case the script should be restarted.
-        ("Powerlaw Tree", nx.random_powerlaw_tree(12, 2), nx.spring_layout),
-        #("Watts-Strogatz", nx.watts_strogatz_graph(12, 4, 0.25), nx.spring_layout),
-        #("Barabasi-Albert", nx.barabasi_albert_graph(12, 3), nx.spring_layout),
-    )
-    # fmt: on'''
 
     topologies = gen_tops(NODES)
 
