@@ -5,15 +5,26 @@ tree is non-deterministic and may not succeed within the default number of attem
 To fix this, remove the Powerlaw Tree tuple entry from `topologies` in main(), or 
 re-run the script until generation succeeds. This is a constraint of NetworkX.
 """
-import matplotlib.pyplot as plt
-import networkx as nx
-import numpy as np
 import random
-from typing import Callable, Union
+import sys
+from typing import Callable, Tuple, Union
 from itertools import combinations, groupby
 
+if sys.version_info < (3, 8):
+    sys.exit("Python 3.8+ is required for this script to operate.")
+
+try:
+    import matplotlib.pyplot as plt
+    import networkx as nx
+    import numpy as np
+except ImportError:
+    sys.exit(
+        "One or more non-standard library dependencies are missing. Run `pip install -r"
+        " requirements.txt` (or install matplotlib, networkx, and numpy yourself)."
+    )
+
 # Simulation function (Set Display flag for individual paths taken)
-def simulate(graph: nx.DiGraph, central_node: int, display: bool):
+def simulate(graph: nx.DiGraph, central_node: int, display: bool) -> Tuple:
     """
     Simulate random transmissions within a battery-constrained sensor node network.
 
@@ -22,10 +33,14 @@ def simulate(graph: nx.DiGraph, central_node: int, display: bool):
 
     :param graph: A networkx digraph representing the network with the attributes
         mentioned above. Edge attributes and all other node attributes are ignored.
+    :param central_node: The index of the node to treat as the C2 to which all
+        other nodes send their messages to. The central node itself may not
+        be the source of a transmission.
     :param display: Enables the display of various debug messages.
     :returns: A tuple of:
         - int: the number of transmissions successfully done before a node died
         - int: the overall energy efficiency of the simulation
+        - nx.DiGraph: The final graph generated from the simulation.
     """
     # Initialize the random number generator, which dictates which nodes
     # need to make transmissions.
@@ -76,8 +91,15 @@ def gnp_random_connected_graph(n, p) -> nx.Graph:
     """
     Generates a random undirected graph, similarly to an Erdős-Rényi
     graph, but enforcing that the resulting graph is connected.
+
+    From https://stackoverflow.com/questions/61958360/how-to-create-random-graph-where-each-node-has-at-least-1-edge-using-networkx
+
+    :param n: The number of nodes in the graph.
+    :param p: The probability of edge formation. A probability of 0 creates a
+        fully disconnected graph; a probability of 1 creates a fully connected
+        graph.
+    :returns: The randomized graph.
     """
-    # From https://stackoverflow.com/questions/61958360/how-to-create-random-graph-where-each-node-has-at-least-1-edge-using-networkx
     edges = combinations(range(n), 2)
     G = nx.Graph()
     G.add_nodes_from(range(n))
@@ -180,12 +202,27 @@ def draw_graph(graph: nx.DiGraph, layout: Callable = nx.shell_layout) -> None:
 
     plt.show()
 
-def gen_tops(nodes: int):
+
+def gen_tops(nodes: int) -> Tuple:
+    """
+    Generate the topology tuples.
+
+    Each tuple represents the data required to simulate and graph one topology,
+    where:
+    - the first element is the "common" name of the topology
+    - the second element is the constant graph to use for the topology
+    - the third element is the layout to use when visualizing is enabled
+
+    Note that the powerlaw tree is a nondeterministic algorithm that may take
+    multiple attempts to generate. This function returns None if the powerlaw
+    tree generation fails within the default number of tries, in which case the
+    topology tuples should be regenerated.
+
+    :param nodes: The number of nodes for each topology.
+    :returns: The tuple of topologies described above, or `None` if powerlaw
+        tree generation has failed.
+    """
     try:
-        # A tuple of topologies, where:
-        # - the first element is the "common" name of the topology
-        # - the second element is the constant graph to use
-        # - the third element is the layout to use when visualizing is enabled
         # fmt: off
         tops = (
             ("Mesh", nx.complete_graph(NODES), nx.circular_layout),
@@ -195,8 +232,6 @@ def gen_tops(nodes: int):
             ("Barbell", nx.barbell_graph(int(NODES / 2 - 1), 2), nx.spring_layout),
             ("Connected Erdős-Rényi", gnp_random_connected_graph(NODES, 0.01), nx.spring_layout),
             ("Connected Caveman", nx.connected_caveman_graph(3, 4), nx.spring_layout),
-            # Note that powerlaw may occasionally fail within the required number of
-            # attempts, in which case the script should be restarted.
             ("Powerlaw Tree", nx.random_powerlaw_tree(NODES, 2), nx.spring_layout),
             ("Watts-Strogatz", nx.watts_strogatz_graph(NODES, 4, 0.25), nx.spring_layout),
             ("Barabasi-Albert", nx.barabasi_albert_graph(NODES, 3), nx.spring_layout),
@@ -204,8 +239,16 @@ def gen_tops(nodes: int):
         # fmt: on
         return tops
     except nx.NetworkXError:
-        print("Failed: Attempting Again")
-        return gen_tops(nodes)
+        # Powerlaw may fail - that's ok, just return None to signal something
+        # else to try again.
+
+        # technically this message is misplaced, but it works for our purposes
+        print(
+            "Powerlaw tree generation has failed - this is expected and you may see"
+            " this message multiple times as the script retries it"
+        )
+        return None
+
 
 if __name__ == "__main__":
     # The "battery" of each node. This is equivalent to the number of transmissions
@@ -218,7 +261,10 @@ if __name__ == "__main__":
     DRAW_INITIAL_GRAPH = False
     DRAW_INTERMEDIATE_GRAPHS = False
 
-    topologies = gen_tops(NODES)
+    # Try generating the topology set; if it fails, try again.
+    topologies = None
+    while topologies is None:
+        topologies = gen_tops(NODES)
 
     for top in topologies:
         tr_data = []
